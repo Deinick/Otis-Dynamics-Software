@@ -1,0 +1,8 @@
+.DS_Store
+Learning-ROS2
+notes
+cad_review
+.venv-onshape
+.env.onshape
+onshape_export
+*.zip
