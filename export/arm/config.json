@@ -1,0 +1,15 @@
+{
+    "url": "https://cad.onshape.com/documents/24172d14ad648476003a096a/v/c8fa33abddb2cef72083573e/e/5d7506bcb0aa174b13d7fbf9",
+    "output_format": "urdf",
+    "robot_name": "echo_arm",
+    "root_instance": "Part 1 <1>",
+    "rename_mates": {
+        "Cylindrical 1": "dof_arm_1",
+        "Revolute 1": "dof_arm_2",
+        "Revolute 2": "dof_arm_3",
+        "Revolute 3": "dof_arm_4",
+        "Revolute 4": "dof_arm_5",
+        "Revolute 5": "dof_arm_6",
+        "Revolute 6": "dof_arm_7"
+    }
+}
