@@ -41,30 +41,43 @@ def mesh_hash(export_dir: Path, part) -> str | None:
     return hashlib.sha1((export_dir / part.meshes[0].filename).read_bytes()).hexdigest()
 
 
-def arm_placement(rigid_link, arm_robot) -> np.ndarray:
+def segment_placement(rigid_link, arm_link) -> np.ndarray:
     """
-    Transform from the arm export's frame to the robot's world frame, found by
-    matching identical meshes between the rigid arm and the arm export.
+    Transform from the arm export's frame to the robot's world frame for one
+    arm segment, found by matching identical meshes between the rigid arm and
+    that segment of the arm export.
+
+    The rigid arm may be posed differently from the arm export (its joints
+    were dragged in Onshape), so each segment can have its own placement.
     """
-    arm_parts = {}
-    for link in arm_robot.links:
-        for part in link.parts:
-            arm_parts.setdefault(mesh_hash(ARM_DIR, part), []).append(part)
+    rigid_parts = {}
+    for part in rigid_link.parts:
+        rigid_parts.setdefault(mesh_hash(BODY_DIR, part), []).append(part)
 
     candidates = []
-    for part in rigid_link.parts:
-        matches = arm_parts.get(mesh_hash(BODY_DIR, part), [])
+    for part in arm_link.parts:
+        matches = rigid_parts.get(mesh_hash(ARM_DIR, part), [])
         if len(matches) == 1:
-            candidates.append(part.T_world_part @ np.linalg.inv(matches[0].T_world_part))
+            candidates.append(matches[0].T_world_part @ np.linalg.inv(part.T_world_part))
 
     if not candidates:
-        sys.exit(f"No part of {rigid_link.name} matches the arm export")
+        sys.exit(f"No part of {arm_link.name} matches the rigid arm {rigid_link.name}")
     reference = candidates[0]
     spread = max(np.abs(candidate - reference).max() for candidate in candidates)
-    print(f"  placed from {len(candidates)} matching parts, max disagreement {spread:.2e}")
+    print(f"  {arm_link.name}: placed from {len(candidates)} parts, disagreement {spread:.1e}")
     if spread > PLACEMENT_TOLERANCE:
-        sys.exit("Matched parts disagree on the arm placement; the arm versions differ")
+        sys.exit("Matched parts disagree on the placement; the arm versions differ")
     return reference
+
+
+def move_subtree(robot, link, T):
+    """Apply a world transform to a link and everything attached below it."""
+    for part in link.parts:
+        part.T_world_part = T @ part.T_world_part
+    link.frames = {name: T @ frame for name, frame in link.frames.items()}
+    for joint in robot.get_link_joints(link):
+        joint.T_world_joint = T @ joint.T_world_joint
+        move_subtree(robot, joint.child, T)
 
 
 def load(export_dir: Path):
@@ -74,12 +87,28 @@ def load(export_dir: Path):
 
 robot = load(BODY_DIR)
 
+# URDF allows one root. Loose pieces (parts missing from the Onshape Body group)
+# keep their world positions, so folding them into the base link is exact.
+base_link, *loose_links = robot.base_links
+for link in loose_links:
+    print(f"WARNING: {link.name} is not attached to the robot in Onshape; merging it into {base_link.name}")
+    base_link.parts.extend(link.parts)
+    robot.links.remove(link)
+robot.base_links = [base_link]
+
 for prefix, shoulder_joint_name in ARMS.items():
     print(f"* Attaching {prefix} arm")
     arm = load(ARM_DIR)
     shoulder_joint = robot.get_joint(shoulder_joint_name)
     rigid_link = shoulder_joint.child
-    T_world_arm = arm_placement(rigid_link, arm)
+    # The shoulder mount is fixed to the shoulder joint, so it places the arm;
+    # the arm then sits in its zero pose (the pose saved in the arm document)
+    T_world_arm = segment_placement(rigid_link, arm.base_links[0])
+    # Anything on the rigid arm's tip (the hand) follows the tip to its new place
+    T_world_posed_tip = segment_placement(rigid_link, arm.get_link(ARM_TIP_LINK))
+    for joint in robot.get_link_joints(rigid_link):
+        joint.T_world_joint = T_world_arm @ np.linalg.inv(T_world_posed_tip) @ joint.T_world_joint
+        move_subtree(robot, joint.child, T_world_arm @ np.linalg.inv(T_world_posed_tip))
 
     for link in arm.links:
         link.name = f"{prefix}_{link.name}"

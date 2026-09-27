@@ -1,0 +1,14 @@
+{
+    "configuration": "default",
+    "documentId": "98d7f8d78389beb59b63ae62",
+    "documentMicroversion": "35a07f8cb52275414953a6b8",
+    "documentVersion": "b83ed8733c4e29be1a9ce9cf",
+    "elementId": "da181792142f60a23ef47ad1",
+    "fullConfiguration": "default",
+    "id": "MV/xlmlXaaJsXE6k9",
+    "isStandardContent": false,
+    "name": "Custom Servo Horn <1>",
+    "partId": "JHD",
+    "suppressed": false,
+    "type": "Part"
+}

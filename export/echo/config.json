@@ -1,0 +1,9 @@
+{
+    "url": "https://cad.onshape.com/documents/846dd40801ae3602477e4fec/w/5c2da1818089d93ed0571503/e/38d1d60061630a1ab9452d26",
+    "output_format": "urdf",
+    "robot_name": "echo",
+    "root_instance": "Cut-Extrude3 <1>",
+    "ignore": [
+        "STD00333_plast_tcb_torx_2.5x8"
+    ]
+}

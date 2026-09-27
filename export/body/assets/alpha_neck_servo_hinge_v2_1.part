@@ -1,0 +1,14 @@
+{
+    "configuration": "default",
+    "documentId": "6ccc7ea5d253cac4bc2c134c",
+    "documentMicroversion": "90264e37efd0cab4e5a034c5",
+    "documentVersion": "92a4ad95912f8347208b8fea",
+    "elementId": "3e27ee816574e2701bed5334",
+    "fullConfiguration": "default",
+    "id": "MhUsW7KqAqb4a8RMc",
+    "isStandardContent": false,
+    "name": "Alpha_Neck_Servo_Hinge_V2-1 <1>",
+    "partId": "JFD",
+    "suppressed": false,
+    "type": "Part"
+}
